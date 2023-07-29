@@ -108,10 +108,17 @@ const SigneeSignupForm = () => {
   const [signeeSignup, extra] = useSigneeSignupMutation();
 
   const [selectedIdentificationFile, setSelectedIdentificationFile] = useState(null);
+  // const [selectedCountry, setSelectedCountry] = useState(null);
+  // const [selectedState, setSelectedState] = useState(null);
+  // const [selectedCity, setSelectedCity] = useState(null);
+  // const [countries, setCountries] = useState([]);
+
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [selectedState, setSelectedState] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
   const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
   const eighteenYearsAgo = new Date();
   eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
 
@@ -148,10 +155,11 @@ const SigneeSignupForm = () => {
       if (isToken) {
         data['jwt'] = isToken;
       }
-      data['city'] = data['city'].value;
 
-      data['country'] = data['country'].value;
-      data['state'] = data['state'].value;
+      data['city'] = selectedCity?.value || '';
+      data['country'] = selectedCountry?.value || '';
+      data['state'] = selectedState?.value || '';
+
       data['idDocumentType'] = data['idDocumentType'].value;
       data['idDocument'] = awsFileUploadReturn?.getUrl;
       await signeeSignup(data);
@@ -169,6 +177,9 @@ const SigneeSignupForm = () => {
     }
   };
   console.log('error', errors);
+  console.log('Selected Countries', selectedCountry);
+  console.log('Selected State', selectedState);
+  console.log('Selected City', selectedCity);
 
   useEffect(() => {
     let { isSuccess } = extra;
@@ -207,6 +218,7 @@ const SigneeSignupForm = () => {
       }, 2000);
     }
   }, [extra]);
+
   useEffect(() => {
     const countryOptions = Country.getAllCountries().map((country) => ({
       value: country.isoCode,
@@ -214,52 +226,80 @@ const SigneeSignupForm = () => {
     }));
     setCountries(countryOptions);
   }, []);
+
+  // New useEffect block to update states when selectedCountry changes
+  useEffect(() => {
+    if (selectedCountry) {
+      const stateOptions = State.getStatesOfCountry(selectedCountry.value).map((state) => ({
+        value: state.isoCode,
+        label: state.name,
+      }));
+      setStates(stateOptions);
+      setSelectedState(null); // Reset selected state when country changes
+      setSelectedCity(null); // Reset selected city when country changes
+      trigger('country'); // Manually trigger validation for "country" field
+    }
+  }, [selectedCountry, trigger]);
+
+  // New useEffect block to update cities when selectedState changes
+  useEffect(() => {
+    if (selectedCountry && selectedState) {
+      const cityOptions = City.getCitiesOfState(selectedCountry.value, selectedState.value).map((city) => ({
+        value: city.name,
+        label: city.name,
+      }));
+      setCities(cityOptions);
+      setSelectedCity(null); // Reset selected city when state changes
+      trigger('state'); // Manually trigger validation for "state" field
+    }
+  }, [selectedCountry, selectedState, trigger]);
+
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 ">
-        <div className="grid xl:grid-cols-2 md:grid-cols-2 grid-cols-1 gap-5 ">
+      <form onSubmit={handleSubmit(onSubmit)} className='space-y-5 '>
+        <div className='grid xl:grid-cols-2 md:grid-cols-2 grid-cols-1 gap-5 '>
           <InputGroup
-            id="firstName"
-            name="firstName"
-            label="First name"
-            type="text"
-            placeholder="First name"
+            id='firstName'
+            name='firstName'
+            label='First name'
+            type='text'
+            placeholder='First name'
             register={register}
             error={errors.firstName}
-            className="h-[52px]"
+            className='h-[52px]'
             merged
           />
           <InputGroup
-            id="Lastnm"
-            name="lastName"
-            label="Last name"
-            type="text"
-            placeholder="Last name"
+            id='Lastnm'
+            name='lastName'
+            label='Last name'
+            type='text'
+            placeholder='Last name'
             register={register}
             error={errors.lastName}
-            className="h-[52px]"
+            className='h-[52px]'
             merged
           />{' '}
           <InputGroup
-            label="E-mail Address"
-            name="email"
-            id="hi_email1"
-            type="email"
+            label='E-mail Address'
+            name='email'
+            id='hi_email1'
+            type='email'
             register={register}
             error={errors.email}
-            placeholder="E-mail Address"
-            className="h-[52px]"
+            placeholder='E-mail Address'
+            className='h-[52px]'
             merged
           />
           <div>
-            <label className="form-label" for="inline-picker">
+            <label className='form-label' for='inline-picker'>
               Date of Birth
             </label>
 
             <Controller
-              name="dob"
+              name='dob'
               control={control}
-              className="form-control  h-[52px]"
+              className='form-control  h-[52px]'
               render={({ field }) => (
                 <Flatpickr
                   register={register}
@@ -267,8 +307,8 @@ const SigneeSignupForm = () => {
                     errors.dob && 'border-danger-500'
                   }`}
                   {...field}
-                  placeholder="Select a date"
-                  id="dob"
+                  placeholder='Select a date'
+                  id='dob'
                   options={{
                     maxDate: eighteenYearsAgo,
                     dateFormat: 'm/d/Y',
@@ -278,17 +318,17 @@ const SigneeSignupForm = () => {
               )}
             />
             {errors.dob && (
-              <p className="text-danger-500 text-sm mt-[.5rem]">
+              <p className='text-danger-500 text-sm mt-[.5rem]'>
                 {errors.dob.message}
               </p>
             )}
           </div>
           <InputGroup
-            label="Password"
-            id="password"
-            name="password"
-            type="password"
-            placeholder="Password"
+            label='Password'
+            id='password'
+            name='password'
+            type='password'
+            placeholder='Password'
             hasicon
             register={register}
             error={errors.password}
@@ -296,11 +336,11 @@ const SigneeSignupForm = () => {
             merged
           />
           <InputGroup
-            label="Confirm Password"
-            id="confirm-password"
-            name="confirmpass"
-            type="password"
-            placeholder="Password"
+            label='Confirm Password'
+            id='confirm-password'
+            name='confirmpass'
+            type='password'
+            placeholder='Password'
             hasicon
             register={register}
             error={errors.confirmpass}
@@ -308,11 +348,11 @@ const SigneeSignupForm = () => {
             merged
           />
           <InputGroup
-            label="Phone Number"
-            name="phoneNumber"
-            prepend="+1"
-            placeholder="Phone Number"
-            id="phoneNumber"
+            label='Phone Number'
+            name='phoneNumber'
+            prepend='+1'
+            placeholder='Phone Number'
+            id='phoneNumber'
             register={register}
             error={errors.phoneNumber}
             onChange={e => {
@@ -320,109 +360,74 @@ const SigneeSignupForm = () => {
             }}
             options={{ phone: true, phoneRegionCode: 'US' }}
             isMask
-            className="h-[52px]"
+            className='h-[52px]'
           />
           <Textarea
-            label="Address"
-            name="address"
-            id="pn4"
+            label='Address'
+            name='address'
+            id='pn4'
             error={errors.address}
             register={register}
-            placeholder="Address"
-            row="1"
-            className="h-[52px]"
+            placeholder='Address'
+            row='1'
+            className='h-[52px]'
           />
-          <div className=" grid grid-cols-2 gap-5">
+          <div className=' grid grid-cols-2 gap-5'>
             <div>
               <SelectField
-                name="country"
-                label="country"
-                id="country"
-                // onClick={e => {
-                //   setValue('country', e);
-                // }}
-                // setValue={setValue}
+                name='country'
+                label='country'
+                id='country'
                 register={register}
-                error={errors.country}
+                error={selectedCountry ? null : errors.country} // Disable error if country is selected
                 control={control}
                 options={countries}
-                // value={selectedCountry}
-                // getOptionLabel={(options) => {
-                //   return options["name"];
-                // }}
-                // getOptionValue={(options) => {
-                //   return options["name"];
-                // }}
-                value={selectedCountry}
-                onChange={(item) => {
-                  setSelectedCountry(item);
+                onChange={(selectedOption) => {
+                  setSelectedCountry(selectedOption);
+                  setValue('country', selectedOption?.value); // Set the selected country value to the form data
                 }}
               />
             </div>
             <div>
               <SelectField
-                name="state"
-                label="state"
-                id="state"
-                setValue={setValue}
+                name='state'
+                label='state'
+                id='state'
+                // setValue={setValue}
                 register={register}
-                error={errors.state}
+                error={selectedState ? null : errors.state} // Disable error if state is selected
                 control={control}
-                options={selectedCountry
-                  ? State.getStatesOfCountry(selectedCountry.value).map((state) => ({
-                      value: state.isoCode,
-                      label: state.name,
-                    }))
-                  : []}
-                // getOptionLabel={options => {
-                //   return options['name'];
-                // }}
-                // getOptionValue={options => {
-                //    return options['name'];
-                // }}
-                value={selectedState}
-                onChange={(item) => setSelectedState(item)}
+                options={states}
+                onChange={(selectedOption) => {
+                  setSelectedState(selectedOption);
+                  setValue('state', selectedOption?.value); // Set the selected country value to the form data
+                }}
               />
             </div>
           </div>
-          <div className=" grid grid-cols-2 gap-5">
+          <div className=' grid grid-cols-2 gap-5'>
             <div>
               <SelectField
-                name="city"
-                label="city"
-                setValue={setValue}
-                id="city"
+                name='city'
+                label='city'
+                id='city'
                 register={register}
-                error={errors.city}
+                error={selectedCity ? null : errors.city} // Disable error if city is selected
                 control={control}
-                options={selectedState
-                  ? City.getCitiesOfState(
-                      selectedCountry?.value,
-                      selectedState?.value
-                    ).map((city) => ({
-                      value: city.name,
-                      label: city.name,
-                    }))
-                  : []}
-                // getOptionLabel={options => {
-                //    return options['name'];
-                // }}
-                // getOptionValue={options => {
-                //    return options['name'];
-                // }}
-                value={selectedCity}
-                onChange={item => {
-                  setSelectedCity(item);
+                options={cities}
+                onChange={(selectedOption) => {
+                  setSelectedCity(selectedOption);
+                  setValue('city', selectedOption?.value); // Set the selected country value to the form data
                 }}
               />
             </div>
             <Textinput
-              name="zipCode"
+              name='zipCode'
               register={register}
-              label="Zip Code"
-              type="text"
-              placeholder="Zip Code"
-              className="h-[52px]"
+              label='Zip Code'
+              type='text'
+              placeholder='Zip Code'
+              className='h-[52px]'
               error={errors.zipCode}
             />
           </div>
@@ -434,9 +439,9 @@ const SigneeSignupForm = () => {
                 setSelectedIdDocType(e.value);
               }}
               className={`${errors.idDocumentType && 'border-danger-500'}`}
-              name="idDocumentType"
-              label="Identification Document Type"
-              id="idDocumentType"
+              name='idDocumentType'
+              label='Identification Document Type'
+              id='idDocumentType'
               register={register}
               errors={errors}
               control={control}
@@ -445,41 +450,41 @@ const SigneeSignupForm = () => {
           </div>
           {idDocumentTypeWatch?.value === 'OTHER' && (
             <InputGroup
-              id="idDocumentTypeOther"
-              name="idDocumentTypeOther"
-              label="Identification Document Type(other)"
-              type="text"
-              placeholder="Identification Document Type"
+              id='idDocumentTypeOther'
+              name='idDocumentTypeOther'
+              label='Identification Document Type(other)'
+              type='text'
+              placeholder='Identification Document Type'
               register={register}
               error={errors.idDocumentTypeOther}
-              className="h-[52px]"
+              className='h-[52px]'
               merged
             />
           )}
           <Textinput
-            name="idDocumentNumber"
+            name='idDocumentNumber'
             register={register}
-            label="Identification Document Number"
-            type="text"
-            placeholder=" Identification Document Number"
-            className="h-[52px]"
+            label='Identification Document Number'
+            type='text'
+            placeholder=' Identification Document Number'
+            className='h-[52px]'
             error={errors.idDocumentNumber}
             merged
           />
           <div>
-            <label className="form-label" for="inline-picker">
+            <label className='form-label' for='inline-picker'>
               Identification Expiration Date
             </label>
             <Controller
-              name="idExpiryDate"
+              name='idExpiryDate'
               control={control}
               render={({ field }) => (
                 <Flatpickr
                   className={`form-control h-[52px] ${
                     errors.idExpiryDate && 'border-danger-500'
                   }`}
-                  placeholder="Select a date"
-                  id="idExpiryDate"
+                  placeholder='Select a date'
+                  id='idExpiryDate'
                   options={{
                     dateFormat: 'm/d/Y',
                   }}
@@ -488,18 +493,18 @@ const SigneeSignupForm = () => {
               )}
             />
             {errors.idExpiryDate && (
-              <p className="text-danger-500 text-sm mt-[.5rem]">
+              <p className='text-danger-500 text-sm mt-[.5rem]'>
                 {errors.idExpiryDate.message}
               </p>
             )}
           </div>
           <div>
-            <label className="form-label" for="inline-picker">
+            <label className='form-label' for='inline-picker'>
               Copy of Identification Document
             </label>
             <Fileinput
-              name="idDocument"
-              id="idDocument"
+              name='idDocument'
+              id='idDocument'
               selectedFile={selectedIdentificationFile}
               error={errors.idDocument}
               onChange={handleFileChange}
@@ -509,7 +514,7 @@ const SigneeSignupForm = () => {
           </div>
         </div>
         <Checkbox
-          label="I agree with Terms of Service"
+          label='I agree with Terms of Service'
           value={checked}
           error={errors.acceptTerms}
           register={register}
@@ -519,10 +524,10 @@ const SigneeSignupForm = () => {
           }}
         />
         <Button
-          text="Sign Up"
-          className="btn-dark block-btn"
+          text='Sign Up'
+          className='btn-dark block-btn'
           style={{ display: 'flex' }}
-          type="submit"
+          type='submit'
           isLoading={isSubmitting}
         />
       </form>
