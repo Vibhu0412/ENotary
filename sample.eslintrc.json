@@ -1,0 +1,74 @@
+{
+  "env": {
+    "browser": true,
+    "es6": true,
+    "node": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:jsx-a11y/recommended",
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:import/react",
+    "plugin:import/typescript",
+    "prettier"
+  ],
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 2021,
+    "sourceType": "module"
+  },
+  "plugins": ["react", "prettier", "unused-imports"],
+  "rules": {
+    "prettier/prettier": [
+      "error",
+      {
+        "endOfLine": "auto"
+      }
+    ],
+    "react/prop-types": "off",
+    "react/react-in-jsx-scope": "off",
+    "import/no-unresolved": [
+      "error",
+      {
+        "ignore": ["^@/"]
+      }
+    ],
+    "no-alert": "error",
+    "no-var": "error",
+    "prefer-const": "error",
+    "no-unused-vars": [
+      "error",
+      {
+        "vars": "all",
+        "args": "after-used",
+        "ignoreRestSiblings": false
+      }
+    ],
+    "prefer-template": "error",
+    "no-extra-parens": "error",
+    "object-shorthand": "error",
+    "arrow-spacing": "error",
+    "prefer-arrow-callback": "error",
+    "no-confusing-arrow": "error",
+    "no-duplicate-imports": "error",
+    "no-use-before-define": "off",
+    "no-console": "error",
+    "no-shadow": "off",
+    "react/jsx-key": "error",
+    "react/no-unused-prop-types": "warn",
+    "react/button-has-type": "off",
+    "react/no-children-prop": "off",
+    "react/forbid-prop-types": "off",
+    "react/no-array-index-key": "off",
+    "react/require-default-props": "off",
+    "react/no-unescaped-entities": "off",
+    "react-hooks/exhaustive-deps": "off",
+    "jsx-a11y/click-events-have-key-events": "off",
+    "jsx-a11y/no-noninteractive-element-interactions": "off",
+    "unused-imports/no-unused-imports": "error"
+  }
+}
