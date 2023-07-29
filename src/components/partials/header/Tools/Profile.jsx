@@ -39,6 +39,22 @@ const Profile = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  // Function to handle logout and navigate to "/signee-login" page
+  const handleLogoutClick = () => {
+    // Pass the callback function to the action
+    console.log("Vaibhav BEfore")
+    dispatch(handleLogout({ callback: navigateToSigneeLogin }));
+    navigate('/signee-login');
+    console.log("Vaibhav After")
+
+  };
+
+  // Function to navigate to "/signee-login" page
+  const navigateToSigneeLogin = () => {
+    // Import the useNavigate hook here, as hooks can only be used in functional components
+    navigate('/signee-login');
+  };
+
   const ProfileMenu = [
     {
       label: 'Profile',
@@ -55,10 +71,10 @@ const Profile = () => {
       },
     },
     {
-      label: 'Logout',
+      label: 'Logout HAHA',
       icon: 'heroicons-outline:login',
       action: () => {
-        dispatch(handleLogout(false));
+        handleLogoutClick();
       },
     },
   ];

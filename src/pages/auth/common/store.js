@@ -113,6 +113,12 @@ export const authSlice = createSlice({
       // remove isAuth from local storage
       window.localStorage.removeItem('isAuth');
       window.localStorage.removeItem('user');
+
+     // Check if the callback function is provided and call it
+     if (typeof action.payload.callback === 'function') {
+      console.log("Vaibhav HAHAH")
+      action.payload.callback();
+    }      
       toast.success('User logged out successfully', {
         position: 'top-right',
       });
