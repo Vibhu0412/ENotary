@@ -179,7 +179,7 @@ const LoginForm = () => {
         </Link>
       </div>
       <Button
-          text="Sign Up"
+          text="Login"
           className="btn-dark block-btn"
 
           type="submit"
