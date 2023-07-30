@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import InputGroup from '@/components/ui/InputGroup';
+import { Country, State, City } from "country-state-city";
 import Button from '@/components/ui/Button';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { country } from '@/constant/address';
@@ -84,6 +85,10 @@ const schema = yup
     registrationDocument: yup
       .mixed()
       .required('Registration Document is Required'),
+      city:yup.string().required('City is Required'),
+      state:yup.string().required('State is Required'),
+      country:yup.string().required('Country is Required'),
+      type:yup.string().required('Organization Type is Required')
     // .test('fileFormat', 'Invalid file format', value => value && FILE_FORMATS.includes(value[0].type)),
     // additionalInformation: yup
     //   .string()
@@ -91,24 +96,12 @@ const schema = yup
 
     // acceptTerms: yup.boolean().oneOf([true], 'Accept Ts & Cs is required').required(),
   })
-  .shape({
-    type: yup.object().shape({
-      label: yup.string().required('Organization Type is Required'),
-      value: yup.string().required('Organization Type is Required'),
-    }),
-    city: yup.object().shape({
-      label: yup.string().required('City is Required'),
-      value: yup.string().required('City is Required'),
-    }),
-    state: yup.object().shape({
-      label: yup.string().required('State is Required'),
-      value: yup.string().required('State is Required'),
-    }),
-    country: yup.object().shape({
-      label: yup.string().required('Country is Required'),
-      value: yup.string().required('Country is Required'),
-    }),
-  })
+  // .shape({
+  //   type: yup.object().shape({
+  //     label: yup.string().required('Organization Type is Required'),
+  //     value: yup.string().required('Organization Type is Required'),
+  //   }),
+  // })
   .required()
   .nullable();
 
@@ -121,6 +114,15 @@ const OrganizationSignupForm = () => {
   const navigate = useNavigate();
   const [checked, setChecked] = useState(false);
   const [picker, setPicker] = useState(new Date());
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [selectedState, setSelectedState] = useState(null);
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
+
+  const [selectedType, setSelectedType] = useState(organizationtype[0]); 
+
   const [selectedOrganizationregiFile, setSelectedOrganizationregiFile] =
     useState(null);
   const [organizationSignup, { isSuccess }] = useOrganizationSignupMutation();
@@ -141,17 +143,24 @@ const OrganizationSignupForm = () => {
     await trigger('registrationDocument');
   };
 
-  const onSubmit = async data => {
+  const onSubmit = async (data) => {
+    console.log('Form data received on submit:', data);
+    console.log('Selected Organization Type:', selectedType);
+    console.log('Errors:', errors);
     try {
       const OrganizationregiFileResponsee = await fileUpload(
         selectedOrganizationregiFile,
         `/OrganizationregiFileFolder/${selectedOrganizationregiFile.name}`
       );
-      data['city'] = data['city'].value;
-      data['country'] = data['country'].value;
-      data['state'] = data['state'].value;
-      data['type'] = data['type'].value;
+      data['city'] = selectedCity?.value || '';
+      data['country'] = selectedCountry?.value || '';
+      data['state'] = selectedState?.value || '';
+      data['type'] = selectedType?.value;
+
+      console.log("ORGANIZATION TYPE ---->", data['type'])
       data['registrationDocument'] = OrganizationregiFileResponsee?.getUrl;
+
+      await trigger('type');
       await organizationSignup(data);
     } catch (e) {
       // toast.error('Error while Creating');
@@ -167,6 +176,40 @@ const OrganizationSignupForm = () => {
       }, 2000);
     }
   }, [isSuccess]);
+  useEffect(() => {
+    const countryOptions = Country.getAllCountries().map((country) => ({
+      value: country.isoCode,
+      label: country.name,
+    }));
+    setCountries(countryOptions);
+  }, []);
+
+  // New useEffect block to update states when selectedCountry changes
+  useEffect(() => {
+    if (selectedCountry) {
+      const stateOptions = State.getStatesOfCountry(selectedCountry.value).map((state) => ({
+        value: state.isoCode,
+        label: state.name,
+      }));
+      setStates(stateOptions);
+      setSelectedState(null); // Reset selected state when country changes
+      setSelectedCity(null); // Reset selected city when country changes
+      trigger('country'); // Manually trigger validation for "country" field
+    }
+  }, [selectedCountry, trigger]);
+
+  // New useEffect block to update cities when selectedState changes
+  useEffect(() => {
+    if (selectedCountry && selectedState) {
+      const cityOptions = City.getCitiesOfState(selectedCountry.value, selectedState.value).map((city) => ({
+        value: city.name,
+        label: city.name,
+      }));
+      setCities(cityOptions);
+      setSelectedCity(null); // Reset selected city when state changes
+      trigger('state'); // Manually trigger validation for "state" field
+    }
+  }, [selectedCountry, selectedState, trigger]);
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 ">
       <div className="grid xl:grid-cols-2 md:grid-cols-2 grid-cols-1 gap-5">
@@ -187,14 +230,20 @@ const OrganizationSignupForm = () => {
               name="type"
               id="type"
               label="Organization Type"
-              setValue={setValue}
+              defaultValue={organizationtype[0]}
+              // setValue={setValue}
               classNamePrefix="select"
               register={register}
-              errors={errors}
+              error={organizationtype ? null : errors.type}
+              // error={errors.type}
               control={control}
               options={organizationtype}
-              // ref={register({ required: "Country is Required" })}
-              // className={`react-select ${errors.country ? 'error' : ''}`}
+              // value={selectedType} // Set the selected value
+              onChange={(selectedOption) => {
+                console.log('Selected Organization Type:', selectedOption?.value);
+                setSelectedType(selectedOption); // Update the selected type
+                setValue('type', selectedOption?.value);
+              }}
             />
           </div>
         </div>
@@ -270,50 +319,55 @@ const OrganizationSignupForm = () => {
           </>
         ) : null}
 
-        <div className=" grid grid-cols-2 gap-5">
-          <div>
-            <div className="h-[52px] react-select has-error">
+<div className=' grid grid-cols-2 gap-5'>
+            <div>
               <SelectField
-                name="country"
-                label="Country"
-                id="country"
-                setValue={setValue}
+                name='country'
+                label='country'
+                id='country'
                 register={register}
-                errors={errors}
+                error={selectedCountry ? null : errors.country} // Disable error if country is selected
                 control={control}
-                options={country}
+                options={countries}
+                onChange={(selectedOption) => {
+                  setSelectedCountry(selectedOption);
+                  setValue('country', selectedOption?.value); // Set the selected country value to the form data
+                }}
+              />
+            </div>
+            <div>
+              <SelectField
+                name='state'
+                label='state'
+                id='state'
+                // setValue={setValue}
+                register={register}
+                error={selectedState ? null : errors.state} // Disable error if state is selected
+                control={control}
+                options={states}
+                onChange={(selectedOption) => {
+                  setSelectedState(selectedOption);
+                  setValue('state', selectedOption?.value); // Set the selected country value to the form data
+                }}
               />
             </div>
           </div>
-          <div >
-            <SelectField
-              name="state"
-              className='bg-dark'
-              label="state"
-              id="state"
-              setValue={setValue}
-              register={register}
-              errors={errors}
-              control={control}
-              options={state}
-            />
-          </div>
-        </div>
-        <div className=" grid grid-cols-2 gap-5">
-          <div>
-            <div className="h-[52px] react-select">
+          <div className=' grid grid-cols-2 gap-5'>
+            <div>
               <SelectField
-                name="city"
-                label="city"
-                setValue={setValue}
-                id="city"
+                name='city'
+                label='city'
+                id='city'
                 register={register}
-                errors={errors}
+                error={selectedCity ? null : errors.city} // Disable error if city is selected
                 control={control}
-                options={city}
+                options={cities}
+                onChange={(selectedOption) => {
+                  setSelectedCity(selectedOption);
+                  setValue('city', selectedOption?.value); // Set the selected country value to the form data
+                }}
               />
             </div>
-          </div>
           <Textinput
             name="zipCode"
             id="zipCode"
@@ -357,59 +411,7 @@ const OrganizationSignupForm = () => {
           className="h-[52px]"
           error={errors.additionalInformation}
         />
-        {/* {showTermCondition ? null : (
-          <>
-            <div>
-              <label className="form-label" for="inline-picker">
-                Organization Registration Document
-              </label>
-              <Fileinput
-                name="basic"
-                selectedFile={selectedFile}
-                onChange={handleFileChange}
-                className="h-[52px]"
-              />
-            </div>
-            <div>
-              <label className="form-label" for="inline-picker">
-                Organization Registration Start Date
-              </label>
-              <Flatpickr
-                className="form-control  h-[52px]"
-                value={picker}
-                onChange={(date) => setPicker(date)}
-                id="default-picker"
-                options={{
-                  dateFormat: "m/d/Y", // Set the date format as "mm/dd/yyyy"
-                }}
-              />
-            </div>
-            <div>
-              <label className="form-label" for="inline-picker">
-                Organization Registration End Date
-              </label>
-              <Flatpickr
-                className="form-control  h-[52px]"
-                value={picker}
-                onChange={(date) => setPicker(date)}
-                id="default-picker"
-                options={{
-                  dateFormat: "m/d/Y", // Set the date format as "mm/dd/yyyy"
-                }}
-              />
-            </div>
-            <Textinput
-              name="organizationId"
-              register={register}
-              label="Organization ID#"
-              type="text"
-              placeholder="Organization ID#"
-              className="h-[52px]"
-              error={errors.organizationId}
-            />
-            
-          </>
-        )} */}
+        
       </div>
       {!showTermCondition ? (
         <>
