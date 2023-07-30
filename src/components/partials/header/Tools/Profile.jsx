@@ -8,6 +8,8 @@ import { handleLogout } from '@/pages/auth/common/store';
 import { UserContext } from '../../../../pages/auth/common/context';
 import UserAvatar from '@/assets/images/all-img/user.png';
 
+import { useLogoutMutation } from '../../../../services/authService';
+
 const profileLabel = () => {
   const user = useSelector(state => state.auth.user);
 
@@ -39,13 +41,45 @@ const Profile = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  const [logout, extra] = useLogoutMutation();
+
+
   // Function to handle logout and navigate to "/signee-login" page
-  const handleLogoutClick = () => {
-    // Pass the callback function to the action
-    console.log("Vaibhav BEfore")
-    dispatch(handleLogout({ callback: navigateToSigneeLogin }));
-    navigate('/signee-login');
-    console.log("Vaibhav After")
+  const handleLogoutClick = async () => {
+
+    try {
+      // Call the logout API using the mutate function from useLogoutMutation hook
+      const response = await logout();
+      console.log("AHAHHAHAHAHHAHAHAHAH --->", response)
+
+      // Check if the API call was successful 
+      if (response?.data?.success) {
+        // Handle successful logout
+        
+        // Pass the callback function to the action
+        console.log("Vaibhav BEfore")
+        dispatch(handleLogout({ callback: navigateToSigneeLogin }));
+        navigate('/signee-login');
+        console.log("Vaibhav After")
+
+        console.log('Logout successful!');
+      } else {
+        // Handle logout failure, you can show a toast or dispatch an error action if needed
+        console.log('Logout failed:', response?.data?.message || 'Unknown error');
+      }
+
+      // Navigate to "/signee-login" page after successful logout
+      navigate('/signee-login');
+    } catch (error) {
+      // Handle any error that occurred during the API call
+      console.error('Error during logout:', error.message);
+    }
+
+    // // Pass the callback function to the action
+    // console.log("Vaibhav BEfore")
+    // dispatch(handleLogout({ callback: navigateToSigneeLogin }));
+    // navigate('/signee-login');
+    // console.log("Vaibhav After")
 
   };
 
