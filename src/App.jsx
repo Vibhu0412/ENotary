@@ -137,6 +137,8 @@ const KanbanPage = lazy(() => import('./pages/app/kanban'));
 const CalenderPage = lazy(() => import('./pages/app/calender'));
 
 import Loading from '@/components/Loading';
+import PrivateRoute from './components/PrivateRoute';
+
 
 function App() {
   return (
@@ -405,24 +407,26 @@ function App() {
           <Route path="todo" element={<TodoPage />} />
           <Route path="tagging" element={<NotaryTagging />} />
         </Route>
-
-        <Route path="/signee" element={<Layout />}>
-          {/* <Route path="meeting" element={<Meeting />} /> */}
-          <Route path="calender" element={<CalenderPage />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="notifications" element={<NotificationPage />} />
-          <Route path="appointment" element={<Appointment />} />
-          {/* <Route path="meeting" element={<Meeting />} /> */}
-          <Route path="meeting" element={<Meeting />} />
-          <Route path="calender" element={<CalenderPage />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="notifications" element={<NotificationPage />} />
-          <Route path="appointment" element={<Appointment />} />
-          <Route path="orgadmin" element={<Organization />} />
-          <Route path="user" element={<User />} />
-          <Route path="appointment" element={<Appointment />} />
-          <Route path="blank-page" element={<BlankPage />} />
-          <Route path="todo" element={<TodoPage />} />
+        
+        <Route path='' element={<PrivateRoute/>}>
+          <Route path="/signee" element={<Layout/>}>
+            {/* <Route path="meeting" element={<Meeting />} /> */}
+            <Route path="calender" element={<CalenderPage />} />
+            {/* <Route path="dashboard" element={<Dashboard />} /> */}
+            <Route path="notifications" element={<NotificationPage />} />
+            <Route path="appointment" element={<Appointment />} />
+            {/* <Route path="meeting" element={<Meeting />} /> */}
+            <Route path="meeting" element={<Meeting />} />
+            <Route path="calender" element={<CalenderPage />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="notifications" element={<NotificationPage />} />
+            <Route path="appointment" element={<Appointment />} />
+            <Route path="orgadmin" element={<Organization />} />
+            <Route path="user" element={<User />} />
+            <Route path="appointment" element={<Appointment />} />
+            <Route path="blank-page" element={<BlankPage />} />
+            <Route path="todo" element={<TodoPage />} />
+          </Route>
         </Route>
 
         <Route
