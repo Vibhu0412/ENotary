@@ -108,7 +108,7 @@ export const authSlice = createSlice({
       window.localStorage.setItem('jwt', JSON.stringify(state.jwt));
     },
     handleLogout: (state, action) => {
-      state.isAuth = action.payload;
+      state.isAuth = false;
       window.localStorage.removeItem('jwt');
       // remove isAuth from local storage
       window.localStorage.removeItem('isAuth');

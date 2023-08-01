@@ -161,14 +161,16 @@ function App() {
             </Suspense>
           }
         />
-        <Route
-          path="/signee-login"
-          element={
-            <Suspense fallback={<Loading />}>
-              <Login />
-            </Suspense>
-          }
-        />
+        <Route path='' element={<PrivateRoute/>}>
+          <Route
+            path="/signee-login"
+            element={
+              <Suspense fallback={<Loading />}>
+                <Login />
+              </Suspense>
+            }
+          />
+        </Route>
         <Route
           path="/admin-login"
           element={

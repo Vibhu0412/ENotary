@@ -64,27 +64,24 @@ const Profile = () => {
 
         console.log('Logout successful!');
       } else {
+        dispatch(handleLogout({ callback: navigateToSigneeLogin }));
         // Handle logout failure, you can show a toast or dispatch an error action if needed
         console.log('Logout failed:', response?.data?.message || 'Unknown error');
       }
 
       // Navigate to "/signee-login" page after successful logout
-      navigate('/signee-login');
+      // navigate('/signee-login');
     } catch (error) {
       // Handle any error that occurred during the API call
       console.error('Error during logout:', error.message);
     }
 
-    // // Pass the callback function to the action
-    // console.log("Vaibhav BEfore")
-    // dispatch(handleLogout({ callback: navigateToSigneeLogin }));
-    // navigate('/signee-login');
-    // console.log("Vaibhav After")
-
+    
   };
 
   // Function to navigate to "/signee-login" page
   const navigateToSigneeLogin = () => {
+    console.log("I am called CALLBACK")
     // Import the useNavigate hook here, as hooks can only be used in functional components
     navigate('/signee-login');
   };
